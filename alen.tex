@@ -6,14 +6,49 @@
 \usepackage{amssymb}
 \usepackage{pgffor}
 \usepackage{tabto}
-
-\newlength{\wwidth}
+\usepackage{etoolbox}
 
 \makeatletter
-\newcommand*{\getlength}[1]{\number#1}
+\newlength{\@currwidth}
+\newlength{\@minrangevar}
+\newbool{@dividesbybool}
+\newbool{@iscommondivisor}
+\newcommand*{\@getlength}[1]{\number#1}
 \newcommand*{\getwidthsp}[2][1]{%
-    \settowidth{\wwidth}{#2}
-    \number \numexpr \getlength{\wwidth}/#1
+    \settowidth{\@currwidth}{#2}
+    \number \numexpr \@getlength{\@currwidth}/#1
+}
+\newcommand*{\@dividesby}[2]{%
+    \ifnum \numexpr (#1 / #2) * #2 = #1%
+        \booltrue{@dividesbybool}%
+    \else
+        \boolfalse{@dividesbybool}%
+    \fi
+}
+\newcommand*{\@minrangewidth}[1]{%
+    \foreach \x in {#1} {%
+        \settowidth{\@minrangevar}{\x}%
+        \global\@minrangevar=\@minrangevar%
+    }
+}
+\newcommand*{\widthgcd}[1]{%                                             
+    \@minrangewidth{#1}% TODO: write proper gcd. recursive?
+    \foreach \divisor in {2,...,10000} {%
+        \global\booltrue{@iscommondivisor}%
+        \foreach \x in {#1} {%
+            \settowidth{\@currwidth}{\x}%
+            \@dividesby{\@currwidth}{\divisor}%
+            \ifbool{@iscommondivisor}
+                {\ifbool{@dividesbybool}
+                    {}
+                    {\global\boolfalse{@iscommondivisor}}%
+                }
+                {}%
+        }%
+        \ifbool{@iscommondivisor}%
+            {\divisor\ }
+            {}%
+    }
 }
 \makeatother
 
@@ -21,17 +56,25 @@
 
 \begin{document}
 
-% \ifnum \numexpr 10*10 = \numexpr 100 10 \else def \fi
-% \number \numexpr 10*10=100
-\getwidthsp{a}
-\getwidthsp[10]{a}
+% \getwidthsp{a}
+% \getwidthsp[10]{a}
 
-327600 32760
+\widthgcd{a,...,z}
 
-\foreach \x in {1,...,9} {%
-    \x \ / 10 * 10 = \number \numexpr \x/10*10
 
-}
+
+% \dividesby{123}{3}
+% \ifbool{dividesbybool} {abc} {}
+% \dividesby{123}{4}
+% \ifbool{dividesbybool} {abc} {def}
+% \dividesby{123}{3}
+% \ifbool{dividesbybool} {abc} {def}
+% \dividesby{123}{4}
+% \ifbool{dividesbybool} {abc} {def}
+
+% 1 0
+% 1 0
+
 
 \foreach \letter in {a,...,z} {%
     \letter \tab
