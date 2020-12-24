@@ -16,7 +16,7 @@
 \newcommand*{\@getlength}[1]{\number#1}
 \newcommand*{\getwidthsp}[2][1]{%
     \settowidth{\@currwidth}{#2}
-    \number \numexpr \@getlength{\@currwidth}/#1
+    \number\numexpr \@getlength{\@currwidth}/#1
 }
 \newcommand*{\@dividesby}[2]{%
     \ifnum \numexpr (#1 / #2) * #2 = #1%
@@ -25,29 +25,37 @@
         \boolfalse{@dividesbybool}%
     \fi
 }
-\newcommand*{\@minrangewidth}[1]{%
+\newcommand*{\@setminrangewidth}[1]{%
     \foreach \x in {#1} {%
         \settowidth{\@minrangevar}{\x}%
         \global\@minrangevar=\@minrangevar%
     }
 }
-\newcommand*{\widthgcd}[1]{%                                             
-    \@minrangewidth{#1}% TODO: write proper gcd. recursive?
-    \foreach \divisor in {2,...,10000} {%
-        \global\booltrue{@iscommondivisor}%
-        \foreach \x in {#1} {%
-            \settowidth{\@currwidth}{\x}%
-            \@dividesby{\@currwidth}{\divisor}%
-            \ifbool{@iscommondivisor}
-                {\ifbool{@dividesbybool}
-                    {}
-                    {\global\boolfalse{@iscommondivisor}}%
-                }
-                {}%
+\newcommand*{\widthgcd}[1]{%
+    \def\loopmax{599}
+    \foreach \divisorone in {0,...,\loopmax} {%
+        \message{\number\numexpr(\loopmax+1)*\divisorone}%
+        \message{out of \number\numexpr(\loopmax+1)*\loopmax ^^J}%
+        \foreach \divisortwo in {0,...,\loopmax} {%
+            \def\combineddiv{\number\numexpr\divisorone*(\loopmax+1)+\divisortwo}%
+            % \typeout{\combineddiv}%
+            \ifnum \combineddiv > 0%
+                \global\booltrue{@iscommondivisor}%
+                \foreach \x in {#1} {%
+                    \settowidth{\@currwidth}{\x}%
+                    \@dividesby{\@currwidth}{\combineddiv}%
+                    \ifbool{@iscommondivisor}
+                        {\ifbool{@dividesbybool}
+                            {}
+                            {\global\boolfalse{@iscommondivisor}}%
+                        }
+                        {}%
+                }%
+                \ifbool{@iscommondivisor}%
+                    {\typeout{Div: \combineddiv}\combineddiv\ }
+                    {}%
+            \fi
         }%
-        \ifbool{@iscommondivisor}%
-            {\divisor\ }
-            {}%
     }
 }
 \makeatother
@@ -56,64 +64,12 @@
 
 \begin{document}
 
-% \getwidthsp{a}
-% \getwidthsp[10]{a}
-
 \widthgcd{a,...,z}
-
-
-
-% \dividesby{123}{3}
-% \ifbool{dividesbybool} {abc} {}
-% \dividesby{123}{4}
-% \ifbool{dividesbybool} {abc} {def}
-% \dividesby{123}{3}
-% \ifbool{dividesbybool} {abc} {def}
-% \dividesby{123}{4}
-% \ifbool{dividesbybool} {abc} {def}
-
-% 1 0
-% 1 0
-
 
 \foreach \letter in {a,...,z} {%
     \letter \tab
     \getwidthsp{\letter}
 
 }
-
-% ---
-
-% \foreach \letter in {a,...,z} {%
-%     \settowidth{\wwidth}{\textbf{\letter}}
-%     \textbf{\letter} \tab
-%     \convertto{em}{\dimexpr \the\wwidth*36} em*36 \tab \tab
-
-% }
-
-% \foreach \letter in {a,...,z} {%
-%     \settowidth{\wwidth}{\letter} \letter \tab
-%     \convertto{mm}{\the\wwidth} mm \tab
-%     \convertto{em}{\the\wwidth} em \tab
-%     \convertto{ex}{\the\wwidth} ex \tab
-%     \convertto{pc}{\the\wwidth} pc \tab
-%     \convertto{dd}{\the\wwidth} dd \tab
-
-% }
-
-% \foreach \letter in {>, \ngtr, \geq, \ngeq, <, \nless, \leq, \nleq} {%
-%     \settowidth{\wwidth}{\letter}
-%     \letter \tab
-%     \convertto{mm}{\the\wwidth} mm \tab
-%     \convertto{em}{\the\wwidth} em \tab
-%     \convertto{ex}{\the\wwidth} ex \tab
-%     \convertto{pc}{\the\wwidth} pc \tab
-%     \convertto{dd}{\the\wwidth} dd \tab
-%     % \convertto{em}{\dimexpr \the\wwidth*65} em*65 \tab
-%     \convertto{pc}{\dimexpr \the\wwidth*54} pc*54 \tab
-
-% }
-% % \settowidth{\wwidth}{b}
-% \the\wwidth
 
 \end{document}
