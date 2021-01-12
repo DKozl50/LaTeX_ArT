@@ -1,0 +1,56 @@
+\documentclass{article}
+\usepackage[T2A]{fontenc}
+\usepackage[utf8x]{inputenc}
+\usepackage[russian]{babel}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{pgffor}
+\usepackage{tabto}
+\usepackage{etoolbox}
+
+\makeatletter
+\newlength{\@currwidth}
+\newbool{@dividesbybool}
+\newcommand*{\@getlength}[1]{\number#1}
+\newcommand*{\getwidthsp}[2][1]{%
+    \settowidth{\@currwidth}{#2}
+    \number\numexpr \@getlength{\@currwidth}/#1
+}
+\newcommand*{\@dividesby}[2]{%
+    \ifnum \numexpr (#1 / #2) * #2 = #1%
+        \booltrue{@dividesbybool}%
+    \else
+        \boolfalse{@dividesbybool}%
+    \fi
+}
+\newcommand*{\programmerdiv}[2]{%
+    \ifnum #1 = 0\relax%
+        0%
+    \else%
+        \the\numexpr (2*#1 - #2) / (2 * #2) \relax%
+    \fi%
+}
+\newcommand*{\modab}[2]{%
+    \the\numexpr #1 - \programmerdiv{#1}{#2} * #2 \relax%
+}
+\newcommand*{\gcdab}[2]{%
+    \typeout{a=#1 b=#2}%
+    \ifnum #2 = 0\relax%
+        #1%
+    \else%
+        \gcdab{#2}{\modab{#1}{#2}}%
+    \fi%
+}
+\makeatother
+
+\NumTabs{8}
+
+\begin{document}
+
+% turns out recursion works in a diffent way in LaTeX, 
+% so my implementation is linear (or even worse)
+
+% this file has been compiling for three weeks and it did not finish
+\gcdab{121393}{75025}
+
+\end{document}
