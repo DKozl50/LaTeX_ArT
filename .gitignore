@@ -1,3 +1,7 @@
+experiments/
+dev/
+.DS_store
+__pycache__
 *.aux
 *.fdb_latexmk
 *.fls
