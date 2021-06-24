@@ -1,9 +1,11 @@
 from typing import Optional
 
 from utils import translate, get_info
-from score import color_penalty_score
+from score import ScoreController
 
 from tqdm import tqdm
+from PIL import Image
+import numpy as np
 
 
 class DPNode:
@@ -23,14 +25,14 @@ class SymbolInfo:
 
 
 # any whitespace is bad
-letters = list('qwertyuiopasdfghjklzxcvbnm'
-               'йцукенгшщзхъфывапролджэячсмитьбю'
-               '!?1234567890-+—'
-               'QWERTYUIOPASDFGHJKLZXCVBNM'
-               'ЙЦУКЕНГШЩЗХЪФЫВАПРОЛДЖЭЯЧСМИТЬБЮ')
+# letters = list('qwertyuiopasdfghjklzxcvbnm'
+#                'йцукенгшщзхъфывапролджэячсмитьбю'
+#                '!?1234567890-+—'
+#                'QWERTYUIOPASDFGHJKLZXCVBNM'
+#                'ЙЦУКЕНГШЩЗХЪФЫВАПРОЛДЖЭЯЧСМИТЬБЮ')
 # letters = list('qwertyiopasdfghjklzxcvbnm')
-# letters = list('aopw!|-=umzyv')
-# letters = list('abpwL')
+letters = list('ЙlSf!im-+—vWHabcde')
+# letters = list('l—')
 
 nice_len = 36400  # around 0.55 pt
 nice_in_page = 700
@@ -50,8 +52,13 @@ for letter in tqdm(letters):
 #     print(symb.width)
 # for symb in symbols:
 #     print(symb.colormap)
-tmp_colors = [s.colormap for s in symbols]
+# tmp_colors = [s.colormap for s in symbols]
 
+image = np.array(Image.open('test.jpg').convert('L'))
+lines = round(size / baselineskip / image.shape[1] * image.shape[0])
+print(lines)
+
+scorer = ScoreController(image, size, baselineskip * lines)
 
 def dp(height):
     arr: list[Optional[DPNode]] = [None] * (size + 1)
@@ -63,17 +70,18 @@ def dp(height):
             for symbol_ind, symb in enumerate(symbols):
                 w = symb.width
                 if i + w <= size:
-                    # score symbols according to their brightness
-                    # now it should result in a gradient-ish latex-art
-                    s = color_penalty_score(
-                        i, height,
-                        w,
-                        symb.colormap,
-                        size,
-                        baselineskip * 30,
-                        min(tmp_colors),
-                        max(tmp_colors),
-                    )  # TODO better score
+                    s = scorer(i, height, w, baselineskip, symb.colormap)
+                    # # score symbols according to their brightness
+                    # # now it should result in a gradient-ish latex-art
+                    # s = color_penalty_score(
+                    #     i, height,
+                    #     w,
+                    #     symb.colormap,
+                    #     size,
+                    #     baselineskip * 30,
+                    #     min(tmp_colors),
+                    #     max(tmp_colors),
+                    # )  # TODO better score
                     if (arr[i + w] is None
                             or curr_score + s < arr[i + w].score):
                         arr[i + w] = DPNode(curr_score + s, curr_seq + [symbol_ind])
@@ -83,7 +91,7 @@ def dp(height):
 
 answer = ''
 curr_height = 0
-for line in tqdm(range(30)):
+for line in tqdm(range(lines)):
     answer += translate(dp(curr_height).sequence, letters) + '\n\n'
     curr_height += baselineskip
 print(answer)
