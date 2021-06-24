@@ -1,4 +1,5 @@
 from typing import Optional
+from collections import UserList
 
 from utils import translate, get_info
 from score import ScoreController
@@ -21,18 +22,34 @@ class SymbolInfo:
         self.colormap = colormap
 
     def __repr__(self):
-        return f'{self.symbol}: {self.width},\t{self.colormap}'
+        return f'{self.symbol}: {self.width},\n{self.colormap}'
+
+
+class ModList(UserList):
+    def __init__(self, mod):
+        super().__init__()
+        self.mod = mod
+        self.data = [None] * mod
+
+    def __getitem__(self, item):
+        item = item % self.mod
+        return super().__getitem__(item)
+
+    def __setitem__(self, key, value):
+        key = key % self.mod
+        super().__setitem__(key, value)
 
 
 # any whitespace is bad
 # letters = list('qwertyuiopasdfghjklzxcvbnm'
 #                'йцукенгшщзхъфывапролджэячсмитьбю'
-#                '!?1234567890-+—'
+#                '!?1234567890-+—.,'
 #                'QWERTYUIOPASDFGHJKLZXCVBNM'
 #                'ЙЦУКЕНГШЩЗХЪФЫВАПРОЛДЖЭЯЧСМИТЬБЮ')
 # letters = list('qwertyiopasdfghjklzxcvbnm')
-letters = list('ЙlSf!im-+—vWHabcde')
-# letters = list('l—')
+# letters = list('ЙlSf!im-+—vWHabcde')
+letters = list('l—L')
+# letters = list('.kнRqpмщ6KЮхiOftVYлlушпДzЬчЪu,2-жBвHНZТгgзPAйь4XЭoDMъ+тx1n78IФ?!aдwЧиdыЯc—ЙhкГvИCEц')
 
 nice_len = 36400  # around 0.55 pt
 nice_in_page = 700
@@ -42,26 +59,23 @@ size = nice_len * nice_in_page
 # baselineskip is 12pt = 12*65536sp
 baselineskip = 12 * 65536
 
+# size *= 2
+
 symbols: list[SymbolInfo] = []
 for letter in tqdm(letters):
     symbols.append(SymbolInfo(letter, *get_info(letter)))
-# print(symbols)
-# for symb in symbols:
-#     print(symb.symbol)
-# for symb in symbols:
-#     print(symb.width)
-# for symb in symbols:
-#     print(symb.colormap)
-# tmp_colors = [s.colormap for s in symbols]
+min_color = min([s.colormap.min() for s in symbols])
+max_width = max([s.width for s in symbols])
 
-image = np.array(Image.open('test.jpg').convert('L'))
+image = np.array(Image.open('frog.jpg').convert('L'))
 lines = round(size / baselineskip / image.shape[1] * image.shape[0])
 print(lines)
 
-scorer = ScoreController(image, size, baselineskip * lines)
+scorer = ScoreController(image, size, baselineskip * lines, col_min=min_color)
+
 
 def dp(height):
-    arr: list[Optional[DPNode]] = [None] * (size + 1)
+    arr = ModList(max_width+1)
     arr[0] = DPNode(0, [])
     for i in tqdm(range(size), leave=False):
         if arr[i]:
@@ -71,22 +85,11 @@ def dp(height):
                 w = symb.width
                 if i + w <= size:
                     s = scorer(i, height, w, baselineskip, symb.colormap)
-                    # # score symbols according to their brightness
-                    # # now it should result in a gradient-ish latex-art
-                    # s = color_penalty_score(
-                    #     i, height,
-                    #     w,
-                    #     symb.colormap,
-                    #     size,
-                    #     baselineskip * 30,
-                    #     min(tmp_colors),
-                    #     max(tmp_colors),
-                    # )  # TODO better score
                     if (arr[i + w] is None
                             or curr_score + s < arr[i + w].score):
                         arr[i + w] = DPNode(curr_score + s, curr_seq + [symbol_ind])
             arr[i] = None
-    return arr[-1]
+    return arr[size]
 
 
 answer = ''

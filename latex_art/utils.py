@@ -24,7 +24,7 @@ def get_info(symbol: str):
         '-density', '300',
         'little.pdf',
         '-colorspace', 'Gray',
-        '-resize', '1x1!',
+        '-resize', '4x4!',
         '-quality', '100',
         '-background', 'white',
         '-alpha', 'remove',
@@ -37,4 +37,4 @@ def get_info(symbol: str):
     img = array(Image.open('./map.png'), dtype=float)
     img /= 65535
 
-    return int(width), img[0, 0]
+    return int(width), img
