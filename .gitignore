@@ -1,9 +1,13 @@
 experiments/
 dev/
-.DS_store
-__pycache__
+__pycache__/
+
+# 'byproducts'
 *.aux
 *.fdb_latexmk
 *.fls
 *.log
 *.out
+latex_art/symbol
+latex_art/width
+latex_art/map.png
