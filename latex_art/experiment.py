@@ -1,8 +1,7 @@
-from typing import Optional
 from collections import UserList
 
 from utils import translate, get_info
-from score import ScoreController
+from score import ScoreFast
 
 from tqdm import tqdm
 from PIL import Image
@@ -48,18 +47,18 @@ class ModList(UserList):
 #                'ЙЦУКЕНГШЩЗХЪФЫВАПРОЛДЖЭЯЧСМИТЬБЮ')
 # letters = list('qwertyiopasdfghjklzxcvbnm')
 # letters = list('ЙlSf!im-+—vWHabcde')
-letters = list('l—L')
-# letters = list('.kнRqpмщ6KЮхiOftVYлlушпДzЬчЪu,2-жBвHНZТгgзPAйь4XЭoDMъ+тx1n78IФ?!aдwЧиdыЯc—ЙhкГvИCEц')
+# letters = list('l—L')
+letters = list('.kнRqpмщ6KЮхiOftVYлlушпДzЬчЪu,2-жBвHНZТгgзPAйь4XЭoDMъ+тx1n78IФ?!aдwЧиdыЯc—ЙhкГvИCEц')
 
 nice_len = 36400  # around 0.55 pt
-nice_in_page = 700
+# nice_in_page = 620
+nice_in_page = 1000  # landscape
 size = nice_len * nice_in_page
 # print(size)
 
 # baselineskip is 12pt = 12*65536sp
 baselineskip = 12 * 65536
 
-# size *= 2
 
 symbols: list[SymbolInfo] = []
 for letter in tqdm(letters):
@@ -71,7 +70,7 @@ image = np.array(Image.open('frog.jpg').convert('L'))
 lines = round(size / baselineskip / image.shape[1] * image.shape[0])
 print(lines)
 
-scorer = ScoreController(image, size, baselineskip * lines, col_min=min_color)
+scorer = ScoreFast(image, size, baselineskip * lines, col_min=min_color)
 
 
 def dp(height):

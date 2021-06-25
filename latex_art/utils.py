@@ -24,7 +24,7 @@ def get_info(symbol: str):
         '-density', '300',
         'little.pdf',
         '-colorspace', 'Gray',
-        '-resize', '4x4!',
+        '-resize', '3x3!',
         '-quality', '100',
         '-background', 'white',
         '-alpha', 'remove',

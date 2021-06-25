@@ -1,3 +1,4 @@
+from abc import ABC, abstractmethod
 from fractions import Fraction
 
 import numpy as np
@@ -15,7 +16,7 @@ def empty_mean(arr: np.ndarray):
         return arr.mean()
 
 
-class ScoreController:
+class BaseScore(ABC):
     def __init__(self, image: np.ndarray, width, height, col_min=0, col_max=1):
         # image  --  numpy array
         # width, height  --  in sp
@@ -40,12 +41,21 @@ class ScoreController:
             for i in range(cw):
                 cx = x + i * sp_per_w
                 cy = y + j * sp_per_h
-                img_slice[j, i] = self._avg_pixel(cx, cy, sp_per_w, sp_per_h)
+                img_slice[j, i] = self.calc_pixel(cx, cy, sp_per_w, sp_per_h)
 
         res = np.linalg.norm(img_slice - self._norm_cmap(cmap))**2 * w / ch / cw
         return res
 
-    def _avg_pixel(self, x: int, y: int, w, h):
+    def _norm_cmap(self, cmap):
+        return (cmap - self.col_min) / self.col_delta
+
+    @abstractmethod
+    def calc_pixel(self, x: int, y: int, w, h):
+        pass
+
+
+class ScoreClever(BaseScore):
+    def calc_pixel(self, x: int, y: int, w, h):
         #   x  first_x  last_x right
         #   v    v         v    v
         #   |----|---------|----| < y
@@ -87,9 +97,6 @@ class ScoreController:
         img_y = int(y // self.h_per_pixel)
         img_first_y = int(first_y // self.h_per_pixel)
         img_last_y = int(last_y // self.h_per_pixel)
-        #
-        # print('x', x, first_x, last_x, right)
-        # print('y', y, first_y, last_y, bottom)
 
         # corners
         res += self.image[img_y, img_x] * (first_x - x) * (first_y - y)
@@ -116,5 +123,11 @@ class ScoreController:
         res /= w * h  # area
         return res
 
-    def _norm_cmap(self, cmap):
-        return (cmap - self.col_min) / self.col_delta
+
+class ScoreFast(BaseScore):
+    def calc_pixel(self, x: int, y: int, w, h):
+        x += w/2
+        y += h/2
+        img_x = int(x // self.w_per_pixel)
+        img_y = int(y // self.h_per_pixel)
+        return self.image[img_y, img_x]
